@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 import numpy as np
 import pandas as pd
 from datetime import datetime
@@ -68,7 +69,7 @@ def ProcesTxt (str):
 			if re.match(r'TOTAL ACCUMULATED AMOUNT', line[2:].lstrip(' ')):
 				filetotal = ClList(line[2:])
 				#print filetotal
-
+	
 	#print 'before assign'
 	labels = ['CNSLT NUM', 'CACT TYPE', 'CURRENT DEALERSHIP', 'IGFS ACCUMULATED AMOUNT', 'IGSI ACCUMULATED AMOUNT', 'TOTAL ACCUMULATED AMOUNT']
 	df = pd.DataFrame(DataSet, columns=labels)
@@ -107,11 +108,14 @@ def ProcesTxt (str):
 #print FileList
 zfile = zipfile.ZipFile('C:\\pycode\\PreProcessTxt\\C529.zip')
 for finfo in zfile.infolist():
+
 	ifile = zfile.open(finfo)
 	for line in ifile:
 		if line.strip():
 			#print 'in strip'
 			if TypePa.match(line[2:].lstrip(' ')):
-				#print 'Process'
-				ProcesTxt(ifile)
+				#print line
+				#print 'now end of check'
+				ProcesTxt(zfile.open(finfo))
 				break
+	#sys.exit("done")			
