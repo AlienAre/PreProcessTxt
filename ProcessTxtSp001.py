@@ -1,11 +1,11 @@
 import os
-import re
+import re, sys
 import numpy as np
 import pandas as pd
 from datetime import datetime
 
 #DataPa = re.compile(r'^\d{1,5}\s{2,}\d{1}\s{2,}IG\D{2}\s{1}\(\d{4}\).*$')
-DataPa = re.compile(r'\d{1,5}\s{2,}\d{1}\s{2,}\D{4}.*$')
+DataPa = re.compile(r'\d{1,5}\s{2,}\d{1,5}\s{2,}\d{1}\s{2,}.*$')
 TypePa = re.compile(r'ACCUMULATOR TYPE.*\d+')
 CycDatePa = re.compile(r'.*THRU\s+20\d{2}\s+\D{3}\s+\d{1,2}')
 Negative = re.compile(r'-')
@@ -27,42 +27,32 @@ def Try_Float(num):
 def ClList (str):
 	#strip left blanks and end '\n', '\r'
 	MyStr = filter(None, re.split(r'\s{2,}', str.lstrip(' ').rstrip('\n').rstrip('\r')))
-
+	#print MyStr
 	for idx in range(len(MyStr)):
 		#remove front and trailing blank for each element and remove ',' seperator for numbers
 		MyStr[idx] = MyStr[idx].lstrip(' ').rstrip(' ').replace(',', '')
 		#update '-' to front to show correct negitive amount
 		if '-' in MyStr[idx]:
-			MyStr[idx] = '-' + MyStr[idx].replace('-', '')
+			try:
+				float(MyStr[idx].replace('-', ''))
+			except ValueError:
+				MyStr[idx]
+			else:
+				MyStr[idx] = float('-' + MyStr[idx].replace('-', ''))
 		MyStr[idx] = Try_Float(MyStr[idx])	
-	#MyStr = [Try_Float(x) for x in MyStr]		
+	#print MyStr
+	#sys.exit("stop")
 	return MyStr
 
 def ProcesTxt (str):	
 	DataSet = []	
-	CycleDate = ''
+	CycleDate = '12/31/2017'
 	OutputNameDate = ''
-	OutputName = '' #use for accumulator num
+	OutputName = '935' #use for accumulator num
 	
 	with open(str) as f:
 		for line in f:
 			if line.strip():
-				#print 'in strip'
-				# get cycle end date
-				if CycDatePa.match(line.lstrip(' ')) and len(CycleDate) == 0:
-					#get start date and end date to a list, set CycleDate to end date
-					#CycleDate = re.search('20\d{2}\s+\D{3}\s+\d{1,2}', line).group()
-					CycleDate = re.findall('20\d{2}\s+\D{3}\s+\d{1,2}', line)[1]
-					print CycleDate
-					tempd = datetime.strptime(CycleDate, '%Y %b %d')
-					CycleDate = tempd.strftime('%m/%d/%Y')
-					OutputNameDate = tempd.strftime('%Y%m%d')
-					#break
-				# get ACCUMULATOR TYPE 
-				if TypePa.match(line[2:].lstrip(' ')) and len(OutputName) == 0:
-					OutputName = re.search(r'\d+', line[2:]).group()			
-					#break
-				#get normal data lines	
 				if DataPa.match(line[2:].lstrip(' ')):
 					DataSet.append(ClList(line[2:]))
 				#get totals from file
@@ -71,8 +61,10 @@ def ProcesTxt (str):
 					#print filetotal
 						
 	#print 'before assign'
-	labels = ['CNSLT NUM', 'CACT TYPE', 'CURRENT DEALERSHIP', 'IGFS ACCUMULATED AMOUNT', 'IGSI ACCUMULATED AMOUNT', 'TOTAL ACCUMULATED AMOUNT']
+	labels = ['RO', 'Cslt', 'AccType', 'Name', 'Income', 'Tax']
 	df = pd.DataFrame(DataSet, columns=labels)
+	print df.head()
+	#sys.exit("stop")
 	
 	if OutputName == '33':
 		df['Description'] = 'Mtge Referral'
@@ -89,17 +81,12 @@ def ProcesTxt (str):
 	df['CYCLE END DATE'] = CycleDate
 	
 	print 'now handle ' + OutputName
-	#print df.dtypes
-	if np.isclose(df['IGSI ACCUMULATED AMOUNT'].sum(), float(filetotal[2])):
-		print 'IGFI ACCUMULATED AMOUNT matches' 
-	if np.isclose(df['TOTAL ACCUMULATED AMOUNT'].sum(), filetotal[3]):
-		print 'TOTAL ACCUMULATED AMOUNT matches' 	
 
 	if OutputName in DebtList:
-		#print 'in if'
+		print 'in if'
 		df.to_csv('A0000'+OutputName+'_'+OutputNameDate+'.csv', index=False)
 	elif OutputName in AlList:
-		
+		print 'in AL'
 		df.to_csv(OutputName+'.csv', index=False)
 		df2 = pd.read_csv(OutputName+'.csv')
 		
@@ -114,22 +101,21 @@ def ProcesTxt (str):
 		
 		os.remove(OutputName+'.csv')
 			
-	else:	
+	else:
+		print 'in else'	
 		df.to_csv(OutputName+'.csv', index=False)
 	return	
 	
-for file in os.listdir('\pycode'):
-    if file.endswith('.txt'):
-		FileList.append(os.path.join('\pycode', file))
+for file in os.listdir('\pycode\Data'):
+    if file.endswith('C935 - Releve 1 Tax Receipts Produced for Valeurs Mobilieres Groupe Investors Inc for 2017.txt'):
+		FileList.append(os.path.join('\pycode\Data', file))
 
 #print FileList	
 for txts in FileList:
 	with open(txts) as f:
 		for line in f:
 			if line.strip():
-				#print 'in strip'
-				if TypePa.match(line[2:].lstrip(' ')):
-					#print 'Process'
-					ProcesTxt(txts)
-					break
+				ProcesTxt(txts)
+				print 'out'
+				break
 					

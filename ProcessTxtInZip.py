@@ -7,10 +7,10 @@ from datetime import datetime
 import zipfile
 
 #DataPa = re.compile(r'^\d{1,5}\s{2,}\d{1}\s{2,}IG\D{2}\s{1}\(\d{4}\).*$')
-DataPa = re.compile(r'\d{1,5}\s{2,}\d{1}\s{2,}\D{4}.*$')
-TypePa = re.compile(r'ACCUMULATOR TYPE.*\d+')
-CycDatePa = re.compile(r'.*THRU\s+20\d{2}\s+\D{3}\s+\d{1,2}')
-Negative = re.compile(r'-')
+DataPa = re.compile(b'\d{1,5}\s{2,}\d{1}\s{2,}\D{4}.*$')
+TypePa = re.compile(b'ACCUMULATOR TYPE.*\d+')
+CycDatePa = re.compile(b'.*THRU\s+20\d{2}\s+\D{3}\s+\d{1,2}')
+Negative = re.compile(b'-')
 
 DebtList = ['1', '2', '7', '1193']
 AlList = ['335', '602', '696', '1133', '1177', '1181', '1317', '1334', '1336', '1338', '1340']
@@ -53,7 +53,7 @@ def ProcesTxt (str):
 				#get start date and end date to a list, set CycleDate to end date
 				#CycleDate = re.search('20\d{2}\s+\D{3}\s+\d{1,2}', line).group()
 				CycleDate = re.findall('20\d{2}\s+\D{3}\s+\d{1,2}', line)[1]
-				print CycleDate
+				print(CycleDate)
 				tempd = datetime.strptime(CycleDate, '%Y %b %d')
 				CycleDate = tempd.strftime('%m/%d/%Y')
 				OutputNameDate = tempd.strftime('%Y%m%d')
@@ -69,18 +69,18 @@ def ProcesTxt (str):
 			if re.match(r'TOTAL ACCUMULATED AMOUNT', line[2:].lstrip(' ')):
 				filetotal = ClList(line[2:])
 				#print filetotal
-	
+
 	#print 'before assign'
 	labels = ['CNSLT NUM', 'CACT TYPE', 'CURRENT DEALERSHIP', 'IGFS ACCUMULATED AMOUNT', 'IGSI ACCUMULATED AMOUNT', 'TOTAL ACCUMULATED AMOUNT']
 	df = pd.DataFrame(DataSet, columns=labels)
 	df['CYCLE END DATE'] = CycleDate
 
-	print 'now handle ' + OutputName
+	print('now handle ' + OutputName)
 	#print df.dtypes
 	if np.isclose(df['IGSI ACCUMULATED AMOUNT'].sum(), float(filetotal[2])):
-		print 'IGFI ACCUMULATED AMOUNT matches'
+		print('IGFI ACCUMULATED AMOUNT matches')
 	if np.isclose(df['TOTAL ACCUMULATED AMOUNT'].sum(), filetotal[3]):
-		print 'TOTAL ACCUMULATED AMOUNT matches'
+		print('TOTAL ACCUMULATED AMOUNT matches')
 
 	if OutputName in DebtList:
 		#print 'in if'
@@ -106,16 +106,16 @@ def ProcesTxt (str):
 	return
 
 #print FileList
-zfile = zipfile.ZipFile('C:\\pycode\\PreProcessTxt\\C529.zip')
+zfile = zipfile.ZipFile('C:\\pycode\\PreProcessTxt\\AL03152018.zip')
 for finfo in zfile.infolist():
 
-	ifile = zfile.open(finfo)
+	ifile = zfile.open(finfo, 'r')
 	for line in ifile:
 		if line.strip():
 			#print 'in strip'
 			if TypePa.match(line[2:].lstrip(' ')):
 				#print line
 				#print 'now end of check'
-				ProcesTxt(zfile.open(finfo))
+				ProcesTxt(zfile.open(finfo, 'r'))
 				break
-	#sys.exit("done")			
+	#sys.exit("done")
