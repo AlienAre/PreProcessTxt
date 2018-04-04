@@ -34,8 +34,13 @@ def ClList (str):
 		MyStr[idx] = MyStr[idx].lstrip(' ').rstrip(' ').replace(',', '')
 		#update '-' to front to show correct negitive amount
 		if '-' in MyStr[idx]:
-			MyStr[idx] = '-' + MyStr[idx].replace('-', '')
-		MyStr[idx] = Try_Float(MyStr[idx])
+			try:
+				float(MyStr[idx].replace('-', ''))
+			except ValueError:
+				MyStr[idx]
+			else:
+				MyStr[idx] = float('-' + MyStr[idx].replace('-', ''))
+		MyStr[idx] = Try_Float(MyStr[idx])			
 	#MyStr = [Try_Float(x) for x in MyStr]
 	return MyStr
 
@@ -106,7 +111,7 @@ def ProcesTxt (str):
 	return
 
 #print FileList
-zfile = zipfile.ZipFile('C:\\pycode\\PreProcessTxt\\AL03152018.zip')
+zfile = zipfile.ZipFile('C:\\pycode\\PreProcessTxt\\AL03312018.zip')
 for finfo in zfile.infolist():
 
 	ifile = zfile.open(finfo, 'r')
