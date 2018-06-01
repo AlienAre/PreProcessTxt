@@ -111,7 +111,7 @@ def ProcesTxt (str):
 	return
 
 #print FileList
-zfile = zipfile.ZipFile('C:\\pycode\\PreProcessTxt\\AL03312018.zip')
+zfile = zipfile.ZipFile('C:\\pycode\\PreProcessTxt\\AL05152018.zip')
 for finfo in zfile.infolist():
 
 	ifile = zfile.open(finfo, 'r')
